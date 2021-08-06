@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getCurrenciesforDateOne, getCurrenciesforDateTwo } from "../api";
+import {
+  getCurrenciesforDate,
+  // getCurrenciesforDateOne,
+  // getCurrenciesforDateTwo,
+} from "../api";
 import dayjs from "dayjs";
 import InputsTime from "./InputsTime";
 import TableRate from "./TableRate";
@@ -43,7 +47,21 @@ function TimeContainer(props) {
             props.dates.push(start);
             start++;
           } while (start <= end);
-          await getSelectCurrencies();
+
+          await getCurrenciesforDate(
+            props.currency.twoCurrency,
+            props.dates
+          ).then((responses) => {
+            changeArrCurrencyDateSelectTwo(responses);
+          });
+
+          await getCurrenciesforDate(
+            props.currency.oneCurrency,
+            props.dates
+          ).then((responses) => {
+            changeArrCurrencyDateSelectOne(responses);
+          });
+
           getUSDRate();
 
           props.changeDatesArr([]);
@@ -56,25 +74,10 @@ function TimeContainer(props) {
     }
   };
 
-  function getSelectCurrencies() {
-    getCurrenciesforDateTwo(props.currency.twoCurrency, props.dates).then(
-      (responses) => {
-        changeArrCurrencyDateSelectTwo(responses);
-      }
-    );
-    getCurrenciesforDateOne(props.currency.oneCurrency, props.dates).then(
-      (responses) => {
-        changeArrCurrencyDateSelectOne(responses);
-      }
-    );
-  }
-
   let [arrUSD, changeArrUSD] = useState([]);
 
   async function getUSDRate() {
-    let result = await getCurrenciesforDateOne("USD", props.dates).then(
-      (r) => r
-    );
+    let result = await getCurrenciesforDate("USD", props.dates).then((r) => r);
     changeArrUSD(result);
   }
 
@@ -107,7 +110,6 @@ function TimeContainer(props) {
           arrCurrencyDateSelectOne={arrCurrencyDateSelectOne}
           arrCurrencyDateSelectTwo={arrCurrencyDateSelectTwo}
           currency={props.currency}
-          getSelectCurrencies={getSelectCurrencies}
           arrUSD={arrUSD}
         />
       )}
