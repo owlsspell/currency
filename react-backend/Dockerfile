@@ -1,0 +1,13 @@
+FROM node:16-alpine3.11
+
+# Create app directory
+WORKDIR /code
+# Install app dependencies
+COPY package*.json ./
+RUN npm install
+# Copy app source code
+COPY . .
+#Expose port and start application
+EXPOSE 8080
+CMD [ "node", "app.js"]
+# CMD ["npm","start"]

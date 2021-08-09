@@ -1,10 +1,44 @@
-version: "3.9"
+version: "3"
+
 services:
   web:
     build: .
     ports:
       - "3000:3000"
+    # tty: true
+    container_name: react
+
     volumes:
-      - .:/code
+      - .:/code/
+    # depends_on:
+    #   - db
+    restart: always
   base:
-    image: node
+    build: ./react-backend
+    # image: node:16-alpine3.11
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./react-backend:/code
+    # depends_on:
+    #   - db
+    container_name: express
+    # tty: true
+    # volumes:
+    #   - .:/home/app/react-backend
+    # environment:
+    #   POSTGRES_HOST: db
+
+    # restart: always
+  # db:
+  #   image: postgres:13.3
+  #   container_name: postgress
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - ./database:/var/lib/postgresql/data/database
+  #   environment:
+  #     POSTGRES_PASSWORD: 123456
+  #     POSTGRES_DB: baseA
+  #     PG_DATA: /var/lib/postgresql/data/database
+  #     # POSTGRES_USER: developer

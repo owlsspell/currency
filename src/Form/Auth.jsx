@@ -49,6 +49,10 @@ const Auth = (props) => {
   const signIn = () => {
     // chackError();
 
+    axios.get(`/getInfo`).then((response) => {
+      console.log(response);
+    });
+
     if (authData.email && authData.password) {
       axios.post(`/login`, { authData }).then((response) => {
         console.log(response);
