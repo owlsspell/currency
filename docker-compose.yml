@@ -10,9 +10,9 @@ services:
 
     volumes:
       - .:/code/
-    # depends_on:
-    #   - db
-    restart: always
+    depends_on:
+      - db
+    # restart: always
   base:
     build: ./react-backend
     # image: node:16-alpine3.11
@@ -20,25 +20,27 @@ services:
       - "8080:8080"
     volumes:
       - ./react-backend:/code
-    # depends_on:
-    #   - db
+    depends_on:
+      - db
     container_name: express
     # tty: true
     # volumes:
     #   - .:/home/app/react-backend
-    # environment:
-    #   POSTGRES_HOST: db
+    environment:
+      POSTGRES_HOST: db
 
     # restart: always
-  # db:
-  #   image: postgres:13.3
-  #   container_name: postgress
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - ./database:/var/lib/postgresql/data/database
-  #   environment:
-  #     POSTGRES_PASSWORD: 123456
-  #     POSTGRES_DB: baseA
-  #     PG_DATA: /var/lib/postgresql/data/database
-  #     # POSTGRES_USER: developer
+  db:
+    image: postgres:13.3
+    container_name: postgress
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db-files:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: baseA
+      # PG_DATA: /var/lib/postgresql/data
+      POSTGRES_USER: developer
+volumes:
+  database-data:
