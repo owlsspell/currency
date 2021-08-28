@@ -2,34 +2,41 @@ version: "3"
 
 services:
   web:
-    build: .
+    # build: .
+    image: node:16-alpine3.11
+    command: npm start
+    working_dir: /code
     ports:
       - "3000:3000"
     # tty: true
     container_name: react
-
     volumes:
       - .:/code/
     depends_on:
       - db
-    # restart: always
+      - base
+    restart: always
   base:
-    build: ./react-backend
-    # image: node:16-alpine3.11
+    # build: ./react-backend
+    image: node:16-alpine3.11
     ports:
       - "8080:8080"
+    working_dir: /code
     volumes:
       - ./react-backend:/code
+      # - ./react-backend/node_modules:/code/node_modules
     depends_on:
       - db
     container_name: express
+    # expose: [8080]
+    command: npm run serve
+
     # tty: true
     # volumes:
     #   - .:/home/app/react-backend
     environment:
       POSTGRES_HOST: db
-
-    # restart: always
+    restart: always
   db:
     image: postgres:13.3
     container_name: postgress
@@ -39,8 +46,10 @@ services:
       - ./db-files:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: 123456
+      # POSTGRES_DB: baseA
       POSTGRES_DB: baseA
       # PG_DATA: /var/lib/postgresql/data
       POSTGRES_USER: developer
+      restart: always
 volumes:
   database-data:

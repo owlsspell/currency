@@ -2,6 +2,7 @@
   text-align: center;
 }
 
+
 .converter {
   width: 300px;
   margin: 50px auto;
@@ -38,6 +39,10 @@ input {
   margin-top: 10px;
   font-size: 18px;
 } */
+
+* {
+  font-size: 14px;
+}
 
 .timeInput {
   min-width: 80px;

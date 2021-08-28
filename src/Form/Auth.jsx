@@ -1,9 +1,11 @@
 import axios from "axios";
 import { useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import Profile from "../Profile/Profile";
+import { authorizationUser, registrationUser } from "../api/api";
 
 const Auth = (props) => {
+  let token = localStorage.getItem("token");
+
   // debugger;
   const [authData, changeAuthData] = useState({ email: "", password: "" });
 
@@ -37,9 +39,11 @@ const Auth = (props) => {
     event.preventDefault();
     // chackError();
     if (authData.email && authData.password) {
-      axios.post("/logup", authData).then((response) => {
+      registrationUser(authData).then((response) => {
         console.log(response);
-        localStorage.setItem("token", response.data.token);
+        // localStorage.setItem("token", response.data.token);
+        signIn();
+        // props.getUserInfo(localStorage.getItem("token"));
       });
       // props.changeAuth(true);
     } else {
@@ -49,15 +53,13 @@ const Auth = (props) => {
   const signIn = () => {
     // chackError();
 
-    axios.get(`/getInfo`).then((response) => {
-      console.log(response);
-    });
-
     if (authData.email && authData.password) {
-      axios.post(`/login`, { authData }).then((response) => {
+      authorizationUser(authData).then((response) => {
+        // debugger;
         console.log(response);
         if (response.data.token) {
           localStorage.setItem("token", response.data.token);
+          props.getUserInfo(localStorage.getItem("token"));
           alert(`You authorized`);
           props.changeAuth(true);
         } else {

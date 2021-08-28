@@ -7,8 +7,12 @@ const config = require("./config");
 const app = express();
 const port = 8080;
 const _ = require("lodash");
+const client = require("./db");
+const autoRouter = require("./routes/routes");
 
-const { Client } = require("pg");
+// const tasks = require("./tasksWithAuto");
+
+// const { Client } = require("pg");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -19,15 +23,27 @@ app.use(express.urlencoded({ extended: true }));
 
 //Base
 
-const client = new Client({
-  user: "developer",
-  host: process.env.POSTGRES_HOST || "db",
-  database: "baseA",
-  password: "123456",
-  port: 5432,
-});
+// const client = new Client({
+//   user: "developer",
+//   host: process.env.POSTGRES_HOST || "db",
+//   database: "baseA",
+//   password: "123456",
+//   port: 5432,
+// });
+
+// module.exports.client = client;
+
+// const client = new Client({
+//   user: "developer",
+//   host: process.env.POSTGRES_HOST || "db",
+//   database: "cars_db",
+//   password: "123456",
+//   port: 5432,
+// });
 
 client.connect();
+
+app.use("/", autoRouter);
 
 /*
 1. Registration
@@ -47,8 +63,8 @@ Send data from protected endpoint to user
 
 */
 
-app.get("/protected", function (req, res, next) {
-  console.log(req.headers);
+app.get("/protected", authorize(), function (req, res, next) {
+  // console.log(req.headers);
   const token = req.headers.Authorization;
   console.log(token);
   jwt.verify(token, config.JWT_SECRET);
@@ -63,14 +79,26 @@ app.get("/protected", function (req, res, next) {
 //     return res.send("True");
 //   }
 // });
-
-app.get("/blog/", authorize(), function (req, res, next) {
+app.get("/blog/", function (req, res, next) {
   return res.send("You blog");
 });
 
-app.get("/profile/", authorize(), function (req, res, next) {
-  const name = jwt.verify(req.headers.authorization, config.JWT_SECRET);
-  return res.json({ name: name.email });
+app.get("/getUser/", authorize(), function (req, res, next) {
+  const token = jwt.verify(req.headers.authorization, config.JWT_SECRET);
+  // console.log(token);
+  client.query(
+    "SELECT id, name,email,avatar FROM users WHERE id=$1;",
+    [token.id],
+    (err, result) => {
+      console.log(result.rows);
+      return res.json({
+        id: result.rows[0].id,
+        name: result.rows[0].name || null,
+
+        avatar: result.rows[0].avatar || null,
+      });
+    }
+  );
 });
 
 app.post("/login/", function (req, res, next) {
@@ -101,7 +129,11 @@ app.post("/login/", function (req, res, next) {
         return res.status(401).send("Invalid password");
       }
       let token = jwt.sign(
-        { email: req.body.authData.email, password: hashedPassword },
+        {
+          id: result.rows[0].id,
+          email: req.body.authData.email,
+          password: hashedPassword,
+        },
         config.JWT_SECRET
       );
       return res.json({ token: token });
@@ -139,9 +171,69 @@ app.post("/logup", function (req, res, next) {
       config.JWT_SECRET
     );
 
-    return res.status(201).json({ token: token });
+    // return res.status(201).json({ token: token });
+    return res.status(201).send("logup");
+
     // client.end();
   });
+});
+
+app.post("/changeUserData", authorize(), (req, res) => {
+  console.log(req.body);
+
+  // const token = jwt.verify(req.headers.authorization, config.JWT_SECRET);
+
+  if (req.body[0].name) {
+    client.query(
+      "UPDATE users SET name=$1 WHERE id=$2",
+      [req.body[0].name, req.body[1].id],
+      (err, result) => {}
+    );
+    // console.log(name);
+  }
+  if (req.body[0].email) {
+    client.query(
+      "UPDATE users SET email=$1 WHERE id=$2",
+      [req.body[0].email, req.body[1].id],
+      (err, result) => {}
+    );
+  }
+});
+
+//User orders
+
+app.get("/orders", authorize(), function (req, res, next) {
+  const token = jwt.verify(req.headers.authorization, config.JWT_SECRET);
+  // console.log(token);
+  client.query(
+    "SELECT * FROM orders WHERE user_id=$1",
+    [token.id],
+    (err, result) => {
+      res.json({ orders: result.rows });
+    }
+  );
+});
+
+//Shop
+
+app.get("/getGoods", function (req, res, next) {
+  client.query("SELECT * FROM shop ORDER BY id;", (err, result) => {
+    res.json({ goods: result.rows });
+  });
+});
+
+app.post("/setOrder", function (req, res, next) {
+  let { brand, price, userId } = req.body;
+  // console.log(userId);
+  client.query(
+    "INSERT INTO orders(order_name,user_id,count_item,price) VALUES ($1,$2,1,$3);",
+    [brand, userId, price],
+    (err, result) => {
+      // res.json({ goods: result.rows });
+    }
+  );
+  console.log(req.body);
+  // console.log(brand);
 });
 
 app.listen(port, () => {
