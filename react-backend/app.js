@@ -5,11 +5,16 @@ const crypto = require("crypto");
 const authorize = require("./authorization-middleware");
 const config = require("./config");
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080;
 const _ = require("lodash");
 const client = require("./db");
 const autoRouter = require("./routes/routes");
-
+var cors = require("cors");
+const fs = require("fs");
+const path = require("path");
+// var mime = require("mime");
+var mime = require("mime-types");
+const multer = require("multer");
 // const tasks = require("./tasksWithAuto");
 
 // const { Client } = require("pg");
@@ -40,8 +45,92 @@ app.use(express.urlencoded({ extended: true }));
 //   password: "123456",
 //   port: 5432,
 // });
-
+app.use(cors());
 client.connect();
+app.use("/static", express.static(__dirname + "/upload"));
+
+app.post("/readImg", async function (req, res) {
+  // const { name, avatar } = req.body;
+  req.setEncoding("base64");
+
+  // console.log(req.body);
+  // console.log(file);
+
+  let file = req.body[1].split(",")[1];
+
+  req.on("data", (chunk) => {
+    console.log("chunk");
+    console.log(chunk);
+    fs.appendFileSync(__dirname + "/upload/" + "file.jpg", chunk, "base64");
+  });
+
+  fs.writeFileSync(__dirname + "/upload/" + "file.jpg", file, "base64");
+});
+
+//Multer
+
+// const upload = multer({ dest: "upload" });
+
+// app.post("/upload", upload.single("filedata"), function (req, res, next) {
+//   let filedata = req.file;
+
+//   console.log(filedata);
+//   if (!filedata) res.send("Ошибка при загрузке файла");
+//   // else res.send("Файл загружен");
+//   else console.log("Файл загружен");
+// });
+
+// app.post("/upload", (req, res) => {
+// let file = req.body.avatar.split(",")[1];
+
+// var fileWriteStream = fs.createWriteStream("./upload/" + req.body.name);
+// fileWriteStream.on("finish", () => {
+//   console.log("file saved successfully");
+//   res.send({ message: "file saved successfully" });
+// });
+// const filename = path.basename(`./upload/` + req.body.name);
+// const mimetype = mime.lookup(filename);
+// res.setHeader("Content-type", mimetype);
+// // let readableStream = fs.createReadStream("./upload/file.jpg");
+// // fs.writeFileSync(__dirname + "/upload/" + filename, body, "base64");
+// // res.end();
+// fileWriteStream.end(file);
+// });
+
+app.post("/profile/download5", async function (req, res) {
+  // console.log(req.body);
+
+  req.setEncoding("base64");
+  console.log("req.files", req.file);
+  fs.writeFileSync(__dirname + "/upload/" + "file.jpg", "", "base64");
+
+  req.on("data", (chunk) => {
+    // console.log("chunk", chunk);
+    fs.appendFileSync(__dirname + "/upload/" + "file.jpg", chunk, "base64");
+  });
+
+  req.on("end", () => {
+    try {
+      const filename = path.basename("/upload/file.jpg");
+      const mimetype = mime.lookup(filename);
+      console.log(mimetype);
+      // console.log(filename);
+
+      res.setHeader("Content-disposition", "attachment; filename=" + filename);
+      res.setHeader("Content-type", mimetype);
+      let readableStream = fs.createReadStream("./upload/file.jpg");
+      // fs.writeFileSync(__dirname + "/upload/" + filename, body, "base64");
+      // res.end();
+
+      // req.pipe(res);
+      readableStream.send(res);
+    } catch (er) {
+      // uh oh! bad json!
+      res.statusCode = 400;
+      return res.end(`error: ${er.message}`);
+    }
+  });
+});
 
 app.use("/", autoRouter);
 

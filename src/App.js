@@ -3,7 +3,7 @@ import { Col, Container, Row, Button } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import React from "react";
 import TimeContainer from "./RateByTime/TimeContainer";
-import { getCurrencies } from "./api";
+import { getCurrencies } from "./api/apiBank";
 import Auth from "./Form/Auth";
 import { Link, Route, Switch, withRouter } from "react-router-dom";
 import Profile from "./Profile/Profile";

@@ -3,7 +3,7 @@ import {
   getCurrenciesforDate,
   // getCurrenciesforDateOne,
   // getCurrenciesforDateTwo,
-} from "../api";
+} from "../api/apiBank";
 import dayjs from "dayjs";
 import InputsTime from "./InputsTime";
 import TableRate from "./TableRate";

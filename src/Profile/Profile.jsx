@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button, Form } from "react-bootstrap";
-import { chengeUserInfo, getUser } from "../api/api";
+import { Button, Form, FormGroup } from "react-bootstrap";
+import { chengeUserInfo, sendAvatarToBase, sendFileToBase } from "../api/api";
 import Auth from "../Form/Auth";
 import {
   ContainerProfile,
@@ -37,14 +37,43 @@ const Profile = (props) => {
     }
     props.getUserInfo(token);
   };
-  console.log(props.infoUser);
-
   const handleSubmit = (e) => {
     e.preventDefault();
     chengeUserInfo(newUserData, props.infoUser, token).then((response) => {
       console.log(response);
     });
     props.getUserInfo(token);
+  };
+
+  const sendAvatar = (e) => {
+    e.preventDefault();
+    let file = e.target[0].files[0];
+    let fileName = file.name;
+    // console.log(fileName);
+    let reader = new FileReader();
+    reader.readAsDataURL(file);
+    // reader.readAsArrayBuffer(file);
+    // reader.readAsBinaryString(file);
+    reader.onload = function () {
+      let photo = reader.result;
+
+      // console.log(photo);
+      sendAvatarToBase(fileName, photo).then((res) => console.log(res));
+    };
+  };
+
+  // const [formData, setFile] = useState();
+
+  const sendFile = (e) => {
+    e.preventDefault();
+    let f = e.target[0].files[0];
+    console.log(f);
+    const formData = new FormData();
+    let file = e.target[0].files[0];
+
+    formData.append("file", file);
+    // formData.get("file");
+    sendFileToBase(formData).then((res) => console.log(res));
   };
 
   return (
@@ -61,6 +90,21 @@ const Profile = (props) => {
             alt=""
           />
         </ImgContainer>
+        <form
+          // action="/upload"
+          // method="post"
+          // enctype="multipart/form-data"
+          onSubmit={(e) => sendAvatar(e)}
+          onDrop={(e) => console.log(e.dataTransfer.files)}
+        >
+          <input type="file" name="filedata" />
+          <input type="submit" value="Send avatar" />
+        </form>
+        <hr />
+        <form onSubmit={(e) => sendFile(e)}>
+          <input type="file" name="Doc" />
+          <input type="submit" value="Send file" />
+        </form>
       </GridColumn>
       <GridColumnForm>
         {props.isAuth ? (
