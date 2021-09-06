@@ -54,7 +54,6 @@ function App(props) {
   async function getUserInfo(token) {
     await getUser(token).then((response) => {
       // debugger;
-      console.log(response.data);
       changeInfoUser(response.data);
     });
     // await setName(infoUser.name);

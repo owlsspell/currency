@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@types/node": "^16.7.10",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "forever": "^4.0.1",
@@ -16,6 +17,7 @@
     "path": "^0.12.7",
     "pg": "^8.7.1",
     "pm2": "^5.1.1",
+    "raw-body": "^2.4.1",
     "sequelize": "^6.6.5"
   },
   "devDependencies": {

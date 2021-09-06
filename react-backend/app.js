@@ -15,12 +15,29 @@ const path = require("path");
 // var mime = require("mime");
 var mime = require("mime-types");
 const multer = require("multer");
+const getRawBody = require("raw-body");
+const contentType = require("content-type");
 // const tasks = require("./tasksWithAuto");
 
 // const { Client } = require("pg");
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// app.use(function (req, res, next) {
+//   getRawBody(
+//     req,
+//     {
+//       length: req.headers["content-length"],
+//       limit: "1000mb",
+//       encoding: contentType.parse(req).parameters.charset,
+//     },
+//     function (err, string) {
+//       if (err) return next(err);
+//       req.text = string;
+//       next();
+//     }
+//   );
+// });
 
 // app.get("/getInfo", function (req, res, next) {
 //   return res.send("WORKED");
@@ -47,7 +64,7 @@ app.use(express.urlencoded({ extended: true }));
 // });
 app.use(cors());
 client.connect();
-app.use("/static", express.static(__dirname + "/upload"));
+app.use("/upload", express.static(path.join(__dirname + "/upload")));
 
 app.post("/readImg", async function (req, res) {
   // const { name, avatar } = req.body;
@@ -97,39 +114,72 @@ app.post("/readImg", async function (req, res) {
 // fileWriteStream.end(file);
 // });
 
+app.post("/sendmanyFile", async function (req, res) {
+  // console.log(req.body);
+  req.setEncoding("base64");
+
+  fs.writeFileSync(
+    __dirname + "/files-upload/" + req.body.name,
+    req.body.result,
+    "base64"
+  );
+  const mimetype = mime.lookup(req.body.name);
+
+  res.setHeader("Content-disposition", "attachment; filename=" + req.body.name);
+  res.setHeader("Content-type", mimetype);
+  res.end();
+});
+
 app.post("/profile/download5", async function (req, res) {
   // console.log(req.body);
 
+  let name = req.headers["file-name"];
   req.setEncoding("base64");
-  console.log("req.files", req.file);
-  fs.writeFileSync(__dirname + "/upload/" + "file.jpg", "", "base64");
+  fs.writeFileSync(__dirname + "/upload/" + name, "", "base64");
 
   req.on("data", (chunk) => {
     // console.log("chunk", chunk);
-    fs.appendFileSync(__dirname + "/upload/" + "file.jpg", chunk, "base64");
+    fs.appendFileSync(__dirname + "/upload/" + name, chunk, "base64");
   });
 
   req.on("end", () => {
     try {
-      const filename = path.basename("/upload/file.jpg");
+      const filename = path.basename("/upload/" + name);
       const mimetype = mime.lookup(filename);
-      console.log(mimetype);
-      // console.log(filename);
 
       res.setHeader("Content-disposition", "attachment; filename=" + filename);
       res.setHeader("Content-type", mimetype);
-      let readableStream = fs.createReadStream("./upload/file.jpg");
+      let readableStream = fs.createReadStream("./upload/" + name, "base64");
       // fs.writeFileSync(__dirname + "/upload/" + filename, body, "base64");
       // res.end();
 
       // req.pipe(res);
-      readableStream.send(res);
+      // readableStream.pipe(res);
+      res.send(name);
     } catch (er) {
       // uh oh! bad json!
       res.statusCode = 400;
       return res.end(`error: ${er.message}`);
     }
   });
+});
+
+app.post("/updateAvatar", (req, res) => {
+  const id = req.headers["user-id"];
+  const name = req.headers["name-picture"];
+
+  const avatar = req.body;
+
+  client.query(
+    "UPDATE users SET avatar=$1 WHERE id=$2",
+    [name, id],
+    (err, result) => {
+      // console.log(result);
+      // return res.json({
+      //   // avatar: result.rows[0].avatar || null,
+      // });
+    }
+  );
 });
 
 app.use("/", autoRouter);

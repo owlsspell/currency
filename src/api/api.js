@@ -26,25 +26,43 @@ export const chengeUserInfo = (newUserData, infoUserObj, token) => {
 
 export const sendAvatarToBase = (name, avatar) => {
   return axios
-    .post("/readImg", [name, avatar], { "Content-type": "multipart/form-data" })
+    .post(
+      "/readImg",
+      { name, avatar },
+      { "Content-type": "multipart/form-data" }
+    )
     .then((response) => response);
 };
-export const sendFileToBase = (formData) => {
-  console.log(formData);
+export const sendFileToBase = (formData, name, id) => {
+  // console.log(formData);
   return axios
     .post("/profile/download5", formData, {
       headers: {
         "Content-type": "multipart/form-data",
+        "File-name": name,
       },
     })
+    .then((response) => {
+      saveAvatarToTable(response, id, name);
+      return response;
+    });
+};
+
+export const saveAvatarToTable = (avatar, id, name) => {
+  console.log(avatar);
+  return axios
+    .post(
+      "/updateAvatar",
+      {},
+      {
+        headers: { "user-id": id, "name-picture": name },
+      }
+    )
     .then((response) => response);
-  // return fetch("/profile/download5", {
-  //   method: "POST",
-  //   body: formData,
-  //   headers: {
-  //     "Content-type": "multipart/form-data",
-  //   },
-  // }).then((response) => response);
+};
+
+export const sendmanyFileToBase = (files) => {
+  return axios.post("/sendmanyFile", files).then((response) => response);
 };
 
 //Shop

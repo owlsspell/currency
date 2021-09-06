@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button, Form, FormGroup } from "react-bootstrap";
-import { chengeUserInfo, sendAvatarToBase, sendFileToBase } from "../api/api";
+import {
+  chengeUserInfo,
+  saveAvatarToTable,
+  sendAvatarToBase,
+  sendFileToBase,
+  sendmanyFileToBase,
+} from "../api/api";
 import Auth from "../Form/Auth";
 import {
   ContainerProfile,
@@ -8,6 +14,7 @@ import {
   GridColumnForm,
   ImgAvatar,
   ImgContainer,
+  PreloadAvatar,
 } from "./Profile.module";
 
 const Profile = (props) => {
@@ -15,6 +22,12 @@ const Profile = (props) => {
   let token = localStorage.getItem("token");
 
   const [newUserData, changeUserData] = useState({});
+  const [filesArr, addFilesArr] = useState({});
+  console.log(filesArr);
+  // const [userAvatar, changeAvatar] = useState(null);
+  // console.log(newUserData);
+  // console.log(props.infoUser);
+  // console.log(userAvatar);
 
   useEffect(() => {
     props.getUserInfo(token);
@@ -57,7 +70,7 @@ const Profile = (props) => {
     reader.onload = function () {
       let photo = reader.result;
 
-      // console.log(photo);
+      console.log(photo);
       sendAvatarToBase(fileName, photo).then((res) => console.log(res));
     };
   };
@@ -66,14 +79,102 @@ const Profile = (props) => {
 
   const sendFile = (e) => {
     e.preventDefault();
-    let f = e.target[0].files[0];
-    console.log(f);
-    const formData = new FormData();
+    // const formData = new FormData();
     let file = e.target[0].files[0];
+    // formData.append("file", file);
+    // // formData.get("file");
+    // let a = formData.get("file");
+    // console.log(a);
+    // let name = Buffer.from(file.name).toString("base64");
 
-    formData.append("file", file);
-    // formData.get("file");
-    sendFileToBase(formData).then((res) => console.log(res));
+    let reader = new FileReader();
+    reader.readAsDataURL(file);
+    // let hashedPict = Buffer.from(file).toString("base64");
+    // console.log(file);
+    let createPictureName;
+    reader.onload = function () {
+      let photo = reader.result;
+      createPictureName = photo.split("/")[3];
+      sendFileToBase(
+        file,
+        createPictureName + file.name,
+        props.infoUser.id
+      ).then((res) =>
+        props.changeInfoUser({ ...props.infoUser, avatar: res.data })
+      );
+    };
+
+    // saveAvatarToTable(userAvatar, props.infoUser.id);
+  };
+
+  const sendmanyFile = (e) => {
+    e.preventDefault();
+    // const resultArr = [];
+    let files = e.target[0].files;
+    function createPictureName(f) {
+      return f.split("/")[3];
+    }
+    return Promise.all(
+      [].map.call(files, (file) => {
+        return new Promise((resolve, reject) => {
+          let reader = new FileReader();
+          let filetype = file.name.split(".")[1];
+          reader.onloadend = function () {
+            // console.log(reader.result.split(",")[1]);
+
+            resolve({
+              result: reader.result.split(",")[1],
+              name:
+                createPictureName(reader.result) + file.name + "." + filetype,
+            });
+            // console.log(reader.result);
+            // console.log(file);
+          };
+          // reader.readAsDataURL(file);
+          reader.readAsDataURL(file);
+        }).then((result) => {
+          console.log(result);
+          sendmanyFileToBase(result);
+          // results.forEach(function (result) {
+          //   console.log(result);
+          // });
+        });
+      })
+    );
+
+    // const converter = (f) => {
+    //   let reader = new FileReader();
+    //   reader.readAsDataURL(f);
+    //   reader.onload = function () {
+    //     let fileToBase64 = reader.result;
+    //     // console.log(photo);
+    //     let name = createPictureName(fileToBase64);
+    //     let data = { name: name, file: fileToBase64 };
+
+    //     addFilesArr({ ...filesArr, ...{ [f.name]: data } });
+    //   };
+    // };
+    // let files = e.target[0].files;
+    // console.log(files);
+    // let a = [...files];
+    // a.map((i) => converter(i));
+    // for (let file of files) {
+    // for (let i = 0; i < files.length; i++) {
+    // let promise = new Promise((res) => {
+    // console.log(file);
+    // converter(file);
+    // converter(file);
+    // let obj = new Promise((resolve) => converter(file));
+    // // Promise.all[obj];
+    // // console.log(createPictureName);
+    // console.log(obj);
+    // resultArr.push(obj);
+    // });
+    // promises.then(console.log(promises));
+    // console.log(promise.then((res) => resultArr.push(res)));
+    // }
+
+    // Promise.all(e.target[0].files).then(sendmanyFileToBase(e.target[0].files));
   };
 
   return (
@@ -84,13 +185,19 @@ const Profile = (props) => {
           <ImgAvatar
             src={
               props.infoUser.avatar
-                ? props.infoUser.avatar
-                : "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/2048px-User-avatar.svg.png"
+                ? "http://localhost:8080/upload/" + props.infoUser.avatar
+                : /*userAvatar */
+                  "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/2048px-User-avatar.svg.png"
             }
+            // src={
+            //   userAvatar
+            //     ? "data:image/png;base64," + userAvatar
+            //     : "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/2048px-User-avatar.svg.png"
+            // }
             alt=""
           />
         </ImgContainer>
-        <form
+        {/* <form
           // action="/upload"
           // method="post"
           // enctype="multipart/form-data"
@@ -99,11 +206,16 @@ const Profile = (props) => {
         >
           <input type="file" name="filedata" />
           <input type="submit" value="Send avatar" />
-        </form>
+        </form> */}
         <hr />
         <form onSubmit={(e) => sendFile(e)}>
           <input type="file" name="Doc" />
           <input type="submit" value="Send file" />
+        </form>
+        <hr />
+        <form onSubmit={(e) => sendmanyFile(e)}>
+          <input type="file" multiple />
+          <input type="submit" value="Отправить" />
         </form>
       </GridColumn>
       <GridColumnForm>
