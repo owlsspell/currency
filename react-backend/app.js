@@ -65,6 +65,10 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cors());
 client.connect();
 app.use("/upload", express.static(path.join(__dirname + "/upload")));
+app.use(
+  "/files-upload",
+  express.static(path.join(__dirname + "/files-upload"))
+);
 
 app.post("/readImg", async function (req, res) {
   // const { name, avatar } = req.body;
@@ -118,11 +122,24 @@ app.post("/sendmanyFile", async function (req, res) {
   // console.log(req.body);
   req.setEncoding("base64");
 
-  fs.writeFileSync(
-    __dirname + "/files-upload/" + req.body.name,
-    req.body.result,
-    "base64"
-  );
+  fs.access("./files-upload/" + req.body.name, fs.F_OK, (err) => {
+    if (err) {
+      fs.writeFileSync(
+        __dirname + "/files-upload/" + req.body.name,
+        req.body.result,
+        "base64"
+      );
+      return;
+    } else {
+      console.log("file exists");
+      fs.writeFileSync(
+        __dirname + "/files-upload/" + req.body.name + "(1)",
+        req.body.result,
+        "base64"
+      );
+    }
+  });
+
   const mimetype = mime.lookup(req.body.name);
 
   res.setHeader("Content-disposition", "attachment; filename=" + req.body.name);
