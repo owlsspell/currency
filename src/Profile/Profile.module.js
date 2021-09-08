@@ -25,3 +25,6 @@ export const GridColumnForm = styled.div`
   justify-self: start;
   min-width: 300px;
 `;
+export const FileForm = styled.form`
+  margin-bottom: 2em;
+`;
