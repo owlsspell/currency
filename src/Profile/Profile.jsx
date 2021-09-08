@@ -10,6 +10,7 @@ import {
 import Auth from "../Form/Auth";
 import {
   ContainerProfile,
+  FileForm,
   GridColumn,
   GridColumnForm,
   ImgAvatar,
@@ -109,7 +110,6 @@ const Profile = (props) => {
 
   const sendmanyFile = (e) => {
     e.preventDefault();
-    // const resultArr = [];
     let files = e.target[0].files;
     function createPictureName(f) {
       return f.split("/")[3];
@@ -118,26 +118,18 @@ const Profile = (props) => {
       [].map.call(files, (file) => {
         return new Promise((resolve, reject) => {
           let reader = new FileReader();
-          let filetype = file.name.split(".")[1];
           reader.onloadend = function () {
             // console.log(reader.result.split(",")[1]);
 
             resolve({
               result: reader.result.split(",")[1],
-              name:
-                createPictureName(reader.result) + file.name + "." + filetype,
+              name: createPictureName(reader.result) + file.name,
             });
-            // console.log(reader.result);
-            // console.log(file);
           };
-          // reader.readAsDataURL(file);
           reader.readAsDataURL(file);
         }).then((result) => {
           console.log(result);
           sendmanyFileToBase(result);
-          // results.forEach(function (result) {
-          //   console.log(result);
-          // });
         });
       })
     );
@@ -189,12 +181,6 @@ const Profile = (props) => {
                 : /*userAvatar */
                   "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/2048px-User-avatar.svg.png"
             }
-            // src={
-            //   userAvatar
-            //     ? "data:image/png;base64," + userAvatar
-            //     : "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/2048px-User-avatar.svg.png"
-            // }
-            alt=""
           />
         </ImgContainer>
         {/* <form
@@ -208,15 +194,25 @@ const Profile = (props) => {
           <input type="submit" value="Send avatar" />
         </form> */}
         <hr />
-        <form onSubmit={(e) => sendFile(e)}>
-          <input type="file" name="Doc" />
-          <input type="submit" value="Send file" />
-        </form>
+        <FileForm onSubmit={(e) => sendFile(e)}>
+          {/* <input type="file" name="Doc" />
+          <input type="submit" value="Send file" /> */}
+          <Form.Group controlId="formFile" className="mb-3">
+            <Form.Control type="file" name="Doc" />
+            <Button type="submit" variant="primary" className="mt-3">
+              Send file
+            </Button>
+          </Form.Group>
+        </FileForm>
         <hr />
-        <form onSubmit={(e) => sendmanyFile(e)}>
-          <input type="file" multiple />
-          <input type="submit" value="Отправить" />
-        </form>
+        <FileForm onSubmit={(e) => sendmanyFile(e)}>
+          <Form.Group controlId="formFileMultiple" className="mb-3">
+            <Form.Control type="file" multiple />
+            <Button type="submit" variant="primary" className="mt-3">
+              Send many file
+            </Button>
+          </Form.Group>
+        </FileForm>
       </GridColumn>
       <GridColumnForm>
         {props.isAuth ? (
